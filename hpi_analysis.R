@@ -8,12 +8,50 @@ setwd("/Users/peterq/korea\ HPI\ data/data")
 hpi_type <- read_csv("hpi_type_copy.csv")
 hpi_scale <- read_csv("hpi_scale_copy.csv")
 
+hpi_type <- hpi_type %>% select(-UNIT, -Item)
+hpi_scale <- hpi_scale %>% select(-UNIT, -Item)
+
+#===============================================================================
+
+# Function for creating dataframes
+
+df_create <- function(dataset, name, subset_argument, drop_vector) {
+  #cleaning data, subsetting, formatting
+  name <- subset(name, subset_argument) #df for hpi scale df where region = WholeCountry
+  
+  #changing date columns to rows with corresponding spi values
+  name <- name %>% 
+    pivot_longer(cols = -drop_vector,
+                 names_to = "date",
+                 values_to = "SalesPriceIndex")
+  
+  #removes ' Month' from date column string values
+  name <- name %>% 
+    mutate(date = gsub(" Month", "", date))
+  
+  #converts date column strings to Date objects 
+  name$DateObjs <- as.Date(paste0(name$date, ".01"), format = "%Y.%m.%d")
+  #creates year & month columns
+  name$Year <- year(name$DateObjs)
+  name$Month <- month(name$DateObjs) 
+  name <- name %>% select(-date) #drops date column
+  
+  #drops NA values 
+  name <- name %>% drop_na(SalesPriceIndex)
+}
+
+#test function 
+subset_argument <- "Region == 'TheWholeCountry'"
+drop_vector <- "c(Type, Region)"
+
+df_create(hpi_type, "test", subset_argument, drop_vector)
+
+
 #===============================================================================
 
 # Whole Country Df (from hpi_type data)
 
 #cleaning data, subsetting, formatting
-hpi_type <- hpi_type %>% select(-UNIT, -Item)
 type_wc <- subset(hpi_type, Region=="TheWholeCountry") #df for hpi scale df where region = WholeCountry
 
 #changing date columns to rows with corresponding spi values
@@ -41,7 +79,6 @@ type_wc <- type_wc %>% drop_na(SalesPriceIndex)
 # Whole Country Df (from hpi_scale data)
 
 #cleaning data, subsetting, formatting
-hpi_scale <- hpi_scale %>% select(-UNIT, -Item)
 scale_wc <- subset(hpi_scale, Region=="TheWholeCountry") #df for hpi scale df where region = WholeCountry
 
 #changing date columns to rows with corresponding spi values
@@ -181,51 +218,6 @@ scale_seoul <- scale_seoul %>% drop_na(SalesPriceIndex)
 #===============================================================================
 
 # Plots (using Whole Country Type subset)
-# 
-# #plot, subset Total for entire country
-# ggplot(data = subset(type_wc, Type == "Total"), 
-#        mapping = aes(x = DateObjs, y = SalesPriceIndex)) +
-#   geom_line(size = 1) +
-#   geom_point(x = as.Date("2021-06-01"), y = 100, color = "red") +
-#   theme(legend.position = c(0.85,0.25)) +
-#   guides(fill = "none") + 
-#   labs(x = "Date", y = "Sales Price Index", 
-#        caption = "*Red dot indicates value at which Sales Price Index is indexed to: Date = 2021-06-01, SPI = 100", 
-#        title = "Sales Price Index for All Types of Housing in The Whole Country (2012-01-01 to 2025-02-01)") +
-#   theme_minimal()
-# 
-# #plot, subset Apartments for entire country
-# ggplot(data = subset(type_wc, Type == "Apartments"), 
-#        mapping = aes(x = DateObjs, y = SalesPriceIndex)) +
-#   geom_line(size = 1, color = "firebrick3") +
-#   geom_point(x = as.Date("2021-06-01"), y = 100, color = "red") +
-#   theme(legend.position = c(0.85,0.25)) +
-#   guides(fill = "none") + 
-#   labs(x = "Date", y = "Sales Price Index", 
-#        caption = "*Red dot indicates value at which Sales Price Index is indexed to: Date = 2021-06-01, SPI = 100", 
-#        title = "Sales Price Index for Apartments in The Whole Country (2012-01-01 to 2025-02-01)")
-# 
-# #plot, subset Row Houses for entire country
-# ggplot(data = subset(type_wc, Type == "Row Houses"), 
-#        mapping = aes(x = DateObjs, y = SalesPriceIndex)) +
-#   geom_line(size = 1, color = "blue3") +
-#   geom_point(x = as.Date("2021-06-01"), y = 100, color = "red") +
-#   theme(legend.position = c(0.85,0.25)) +
-#   guides(fill = "none") + 
-#   labs(x = "Date", y = "Sales Price Index", 
-#        caption = "*Red dot indicates value at which Sales Price Index is indexed to: Date = 2021-06-01, SPI = 100", 
-#        title = "Sales Price Index for Row Houses in The Whole Country (2012-01-01 to 2025-02-01)")
-# 
-# #plot, subset Detached Houses for entire country
-# ggplot(data = subset(type_wc, Type == "Detached Houses"), 
-#        mapping = aes(x = DateObjs, y = SalesPriceIndex)) +
-#   geom_line(size = 1, color = "gray70") +
-#   geom_point(x = as.Date("2021-06-01"), y = 100, color = "red") +
-#   theme(legend.position = c(0.85,0.25)) +
-#   guides(fill = "none") + 
-#   labs(x = "Date", y = "Sales Price Index", 
-#        caption = "*Red dot indicates value at which Sales Price Index is indexed to: Date = 2021-06-01, SPI = 100", 
-#        title = "Sales Price Index for Detached Houses in The Whole Country (2012-01-01 to 2025-02-01)")
 
 #plot, combining all Types of housing
 ggplot(data = type_wc, mapping = aes(x = DateObjs, y = SalesPriceIndex, color = Type)) +
@@ -237,7 +229,6 @@ ggplot(data = type_wc, mapping = aes(x = DateObjs, y = SalesPriceIndex, color = 
        caption = "*Red dot indicates value at which Sales Price Index is indexed to: Date = 2021-06-01, SPI = 100", 
        title = "Sales Price Index for Types of Housing in The Whole Country (2012-01-01 to 2025-02-01)") +
   theme_minimal()
-
 
 #===============================================================================
 
