@@ -2,6 +2,7 @@ library(tidyverse)
 library(modelsummary)
 library(dplyr)
 library(estimatr)
+library(patchwork)
 
 #import data
 setwd("/Users/peterq/korea\ HPI\ data/data")
@@ -13,214 +14,80 @@ hpi_scale <- hpi_scale %>% select(-UNIT, -Item)
 
 #===============================================================================
 
-# Function for creating dataframes
+#Creating Subsets From Imported Data Function
 
-df_create <- function(dataset, name, subset_argument, drop_vector) {
-  #cleaning data, subsetting, formatting
-  name <- subset(name, subset_argument) #df for hpi scale df where region = WholeCountry
+create_subset <- function(input_df, remove_cols, filter_region_value) {
   
-  #changing date columns to rows with corresponding spi values
-  name <- name %>% 
-    pivot_longer(cols = -drop_vector,
+  df_filtered <- subset(input_df, Region %in% filter_region_value) # creates df with only certain regions
+
+  df_long <- df_filtered %>% 
+    pivot_longer(cols = -remove_cols,
                  names_to = "date",
-                 values_to = "SalesPriceIndex")
+                 values_to = "SalesPriceIndex") # makes df into long format
+
+  df_clean <- df_long %>% 
+    mutate(date = gsub(" Month", "", date)) #removes ' Month' from date column string values
   
-  #removes ' Month' from date column string values
-  name <- name %>% 
-    mutate(date = gsub(" Month", "", date))
+  df_clean$DateObjs <- as.Date(paste0(df_clean$date, ".01"), format = "%Y.%m.%d") #creates Date objects
   
-  #converts date column strings to Date objects 
-  name$DateObjs <- as.Date(paste0(name$date, ".01"), format = "%Y.%m.%d")
-  #creates year & month columns
-  name$Year <- year(name$DateObjs)
-  name$Month <- month(name$DateObjs) 
-  name <- name %>% select(-date) #drops date column
+  df_clean$Year <- year(df_clean$DateObjs) #creates Year column
+  df_clean$Month <- month(df_clean$DateObjs) #creates Month column
+  df_clean <- df_clean %>% select(-date) #removes date column
+
+  df_final <- df_clean %>% drop_na(SalesPriceIndex)
   
-  #drops NA values 
-  name <- name %>% drop_na(SalesPriceIndex)
+  return(df_final)
 }
 
-#test function 
-subset_argument <- "Region == 'TheWholeCountry'"
-drop_vector <- "c(Type, Region)"
-
-df_create(hpi_type, "test", subset_argument, drop_vector)
-
-
 #===============================================================================
 
-# Whole Country Df (from hpi_type data)
+# Whole Country Subset (from hpi_type data)
+remove_cols <- c("Type", "Region")
+filter_region_value <- c("TheWholeCountry")
 
-#cleaning data, subsetting, formatting
-type_wc <- subset(hpi_type, Region=="TheWholeCountry") #df for hpi scale df where region = WholeCountry
+type_wholecountry <- create_subset(input_df = hpi_type, remove_cols, filter_region_value) 
 
-#changing date columns to rows with corresponding spi values
-type_wc <- type_wc %>% 
-  pivot_longer(cols = -c(Type, Region),
-               names_to = "date",
-               values_to = "SalesPriceIndex")
+# Whole Country Subset (from hpi_scale data)
+remove_cols <- c("Type", "Region", "Scale")
+filter_region_value <- c("TheWholeCountry")
 
-#removes ' Month' from date column string values
-type_wc <- type_wc %>% 
-  mutate(date = gsub(" Month", "", date))
+scale_wholecountry <- create_subset(input_df = hpi_scale, remove_cols, filter_region_value) 
 
-#converts date column strings to Date objects 
-type_wc$DateObjs <- as.Date(paste0(type_wc$date, ".01"), format = "%Y.%m.%d")
-#creates year & month columns
-type_wc$Year <- year(type_wc$DateObjs)
-type_wc$Month <- month(type_wc$DateObjs) 
-type_wc <- type_wc %>% select(-date) #drops date column
+# Provinces Subset (from hpi_type data)
+remove_cols <- c("Type", "Region")
+filter_region_value <- c('Gyeonggi', 'Gangwon', 'Chungbuk', 'Chungnam', 'Gyeongbuk',
+                         'Gyeongnam', 'Jeju', 'Jeonbuk', 'Jeonnam')
 
-#drops NA values 
-type_wc <- type_wc %>% drop_na(SalesPriceIndex)
+type_provinces <- create_subset(input_df = hpi_type, remove_cols, filter_region_value)
 
-#===============================================================================
+# Provinces Subset (from hpi_scale data)
+remove_cols <- c("Type", "Region", "Scale")
+filter_region_value <- c('Gyeonggi', 'Gangwon', 'Chungbuk', 'Chungnam', 'Gyeongbuk',
+                         'Gyeongnam', 'Jeju', 'Jeonbuk', 'Jeonnam')
 
-# Whole Country Df (from hpi_scale data)
+scale_provinces <- create_subset(input_df = hpi_scale, remove_cols, filter_region_value) 
 
-#cleaning data, subsetting, formatting
-scale_wc <- subset(hpi_scale, Region=="TheWholeCountry") #df for hpi scale df where region = WholeCountry
+# Seoul Subset (from type data)
+remove_cols <- c("Type", "Region")
+filter_region_value <- c('Non-SeoulMetropolitanArea', 'NorthernSeoul', 'Seoul', 'SeoulMetropolitanArea', 'SouthernSeoul')
 
-#changing date columns to rows with corresponding spi values
-scale_wc <- scale_wc %>% 
-  pivot_longer(cols = -c(Type, Region, Scale),
-               names_to = "date",
-               values_to = "SalesPriceIndex")
+type_seoul <- create_subset(input_df = hpi_type, remove_cols, filter_region_value)
 
-#removes ' Month' from date column string values
-scale_wc <- scale_wc %>% 
-  mutate(date = gsub(" Month", "", date))
+# Seoul Subset (from scale data)
+remove_cols <- c("Type", "Region", "Scale")
+filter_region_value <- c('Non-SeoulMetropolitanArea', 'NorthernSeoul', 'Seoul', 'SeoulMetropolitanArea', 'SouthernSeoul')
 
-#converts date column strings to Date objects 
-scale_wc$DateObjs <- as.Date(paste0(scale_wc$date, ".01"), format = "%Y.%m.%d")
-#creates year & month columns
-scale_wc$Year <- year(scale_wc$DateObjs)
-scale_wc$Month <- month(scale_wc$DateObjs) 
-scale_wc <- scale_wc %>% select(-date) #drops date column
-
-#drops NA values 
-scale_wc <- scale_wc %>% drop_na(SalesPriceIndex)
-
-#===============================================================================
-
-# Provinces Df (from hpi_type data)
-
-type_provinces <- subset(hpi_type, Region == "Gyeonggi" 
-                          | Region == "Gangwon" 
-                          | Region == "Chungbuk" | Region == "Chungnam" 
-                          | Region == "Gyeongbuk" | Region == "Gyeongnam" 
-                          | Region == "Jeju" | Region == "Jeonbuk" 
-                          | Region == "Jeonnam")
-
-#changing date columns to rows with corresponding spi values
-type_provinces <- type_provinces %>% 
-  pivot_longer(cols = -c(Type, Region),
-               names_to = "date",
-               values_to = "SalesPriceIndex")
-
-#removes ' Month' from date column string values
-type_provinces <- type_provinces %>% 
-  mutate(date = gsub(" Month", "", date))
-
-#converts date column strings to Date objects 
-type_provinces$DateObjs <- as.Date(paste0(type_provinces$date, ".01"), format = "%Y.%m.%d")
-#creates year & month columns
-type_provinces$Year <- year(type_provinces$DateObjs)
-type_provinces$Month <- month(type_provinces$DateObjs) 
-type_provinces <- type_provinces %>% select(-date) #drops date column
-
-#drops NA values 
-type_provinces <- type_provinces %>% drop_na(SalesPriceIndex)
-
-#===============================================================================
-
-# Provinces Df (from hpi_scale data)
-
-scale_provinces <- subset(hpi_scale, Region == "Gyeonggi" 
-                          | Region == "Gangwon" 
-                          | Region == "Chungbuk" | Region == "Chungnam" 
-                          | Region == "Gyeongbuk" | Region == "Gyeongnam" 
-                          | Region == "Jeju" | Region == "Jeonbuk" 
-                          | Region == "Jeonnam")
-
-#changing date columns to rows with corresponding spi values
-scale_provinces <- scale_provinces %>% 
-  pivot_longer(cols = -c(Type, Region, Scale),
-               names_to = "date",
-               values_to = "SalesPriceIndex")
-
-#removes ' Month' from date column string values
-scale_provinces <- scale_provinces %>% 
-  mutate(date = gsub(" Month", "", date))
-
-#converts date column strings to Date objects 
-scale_provinces$DateObjs <- as.Date(paste0(scale_provinces$date, ".01"), format = "%Y.%m.%d")
-#creates year & month columns
-scale_provinces$Year <- year(scale_provinces$DateObjs)
-scale_provinces$Month <- month(scale_provinces$DateObjs) 
-scale_provinces <- scale_provinces %>% select(-date) #drops date column
-
-#drops NA values 
-scale_provinces <- scale_provinces %>% drop_na(SalesPriceIndex)
-
-#===============================================================================
-
-# Seoul Df (from type data)
-
-type_seoul <- subset(hpi_type, grepl("Seoul", Region)) #df for hpi scale df where region = Seoul
-
-#changing date columns to rows with corresponding spi values
-type_seoul <- type_seoul %>% 
-  pivot_longer(cols = -c(Type, Region),
-               names_to = "date",
-               values_to = "SalesPriceIndex")
-
-#removes ' Month' from date column string values
-type_seoul <- type_seoul %>% 
-  mutate(date = gsub(" Month", "", date))
-
-#converts date column strings to Date objects 
-type_seoul$DateObjs <- as.Date(paste0(type_seoul$date, ".01"), format = "%Y.%m.%d")
-#creates year & month columns
-type_seoul$Year <- year(type_seoul$DateObjs)
-type_seoul$Month <- month(type_seoul$DateObjs) 
-type_seoul <- type_seoul %>% select(-date) #drops date column
-
-#drops NA values 
-type_seoul <- type_seoul %>% drop_na(SalesPriceIndex)
-
-#===============================================================================
-
-# Seoul Df (from scale data)
-
-scale_seoul <- subset(hpi_scale, grepl("Seoul", Region)) #df for hpi scale df where region = Seoul
-
-#changing date columns to rows with corresponding spi values
-scale_seoul <- scale_seoul %>% 
-  pivot_longer(cols = -c(Type, Region, Scale),
-               names_to = "date",
-               values_to = "SalesPriceIndex")
-
-#removes ' Month' from date column string values
-scale_seoul <- scale_seoul %>% 
-  mutate(date = gsub(" Month", "", date))
-
-#converts date column strings to Date objects 
-scale_seoul$DateObjs <- as.Date(paste0(scale_seoul$date, ".01"), format = "%Y.%m.%d")
-#creates year & month columns
-scale_seoul$Year <- year(scale_seoul$DateObjs)
-scale_seoul$Month <- month(scale_seoul$DateObjs) 
-scale_seoul <- scale_seoul %>% select(-date) #drops date column
-
-#drops NA values 
-scale_seoul <- scale_seoul %>% drop_na(SalesPriceIndex)
+scale_seoul <- create_subset(input_df = hpi_scale, remove_cols, filter_region_value) 
 
 #===============================================================================
 
 # Plots (using Whole Country Type subset)
 
 #plot, combining all Types of housing
-ggplot(data = type_wc, mapping = aes(x = DateObjs, y = SalesPriceIndex, color = Type)) +
+
+max_spi <- max(type_wholecountry$SalesPriceIndex, na.rm = TRUE)
+
+ggplot(data = type_wholecountry, mapping = aes(x = DateObjs, y = SalesPriceIndex, color = Type)) +
   geom_line(size = 1) +
   geom_point(x = as.Date("2021-06-01"), y = 100, color = "red") +
   theme(legend.position = c(0.85,0.25)) +
@@ -228,7 +95,12 @@ ggplot(data = type_wc, mapping = aes(x = DateObjs, y = SalesPriceIndex, color = 
   labs(x = "Date", y = "Sales Price Index", 
        caption = "*Red dot indicates value at which Sales Price Index is indexed to: Date = 2021-06-01, SPI = 100", 
        title = "Sales Price Index for Types of Housing in The Whole Country (2012-01-01 to 2025-02-01)") +
-  theme_minimal()
+  theme_minimal() +
+  scale_x_date(breaks = as.Date(paste0(2012:2025, "-01-01")), date_labels = "%Y") +
+  scale_y_continuous(breaks = c(seq(0, max_spi-1, by = 5), max_spi), 
+                     position = "right", 
+                     labels = function(x) ifelse(x == max_spi, paste0("Max: ", x), x)) +
+  geom_hline(yintercept=max_spi, linetype="dashed")
 
 #===============================================================================
 
