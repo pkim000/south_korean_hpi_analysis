@@ -14,7 +14,7 @@ hpi_scale <- hpi_scale %>% select(-UNIT, -Item)
 
 #===============================================================================
 
-#Creating Subsets From Imported Data Function
+# Function Creating Subsets From Imported Data 
 
 create_subset <- function(input_df, remove_cols, filter_region_value) {
   
@@ -38,6 +38,84 @@ create_subset <- function(input_df, remove_cols, filter_region_value) {
   
   return(df_final)
 }
+
+# Function for Creating Plots
+
+create_spi_plot <- function(data_plot, line_colors, aes_mapping, position, graph_title) {
+  
+  max_spi <- max(data_plot$SalesPriceIndex, na.rm = TRUE)
+  
+  plot <- ggplot(data = data_plot, 
+                 mapping = aes_mapping) +
+    geom_line(size = 1) +
+    scale_color_manual(values = line_colors) +
+    geom_point(x = as.Date("2021-06-01"), y = 100, color = "red") +
+    theme_minimal() +
+    theme(legend.position = position) +
+    guides(fill = "none") + 
+    labs(x = "Date", y = "Sales Price Index", 
+         caption = "*Red dot indicates value at which Sales Price Index is indexed to: Date = 2021-06-01, SPI = 100", 
+         title = graph_title) +
+    scale_x_date(breaks = as.Date(paste0(2012:2025, "-01-01")), date_labels = "%Y") +
+    scale_y_continuous(breaks = c(seq(0, max_spi-1, by = 5), max_spi), 
+                       position = "right", 
+                       labels = function(x) ifelse(x == max_spi, paste0("Max: ", x), x)) +
+    geom_hline(yintercept=max_spi, linetype="dashed")
+  
+  return(plot)
+}
+
+# line_colors <- c("salmon", "gold", "aquamarine", "darkblue")
+# data_plot <- type_wholecountry
+# aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Type)
+# position <- c(0.85,0.25)
+# graph_title <- "Sales Price Index for Types of Housing in The Whole Country (2012-01-01 to 2025-02-01)"
+# 
+# plot <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+# 
+# plot
+
+# line_colors <- c("salmon", "gold", "aquamarine", "darkblue", "violet", "lightpink", "lightgreen", "dodgerblue", "deeppink2")
+# data_plot <- subset(type_provinces, Type == "Total")
+# aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, fill = Region, color = Region)
+# position <- c(0.75,0.25)
+# graph_title <- "Sales Price Index for All Types of Housing in each Province (2012-01-01 to 2025-02-01)"
+# 
+# plot2 <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+# 
+# plot2
+# 
+# line_colors <- c("seagreen1")
+# data_plot <- subset(type_seoul, Type == "Total" & Region == "Seoul")
+# aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Region)
+# position <- c(0.85,0.25)
+# graph_title <- "Sales Price Index for All Types of Housing in Seoul (2012-01-01 to 2025-02-01)"
+# 
+# plot3 <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+# 
+# plot3
+# 
+
+# line_colors <- c("salmon", "gold", "aquamarine", "darkblue", "violet", "lightpink")
+# data_plot <- subset(scale_wholecountry, Type == "Apartments")
+# aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, fill = Scale, color = Scale)
+# position <- c(0.85,0.25)
+# graph_title <- "Sales Price Index for Apartments by Scale for The Whole Country (2012-01-01 to 2025-02-01)"
+# 
+# plot4 <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+# 
+# plot4
+
+#plot, subset apartments in Gyeonggi by scale 
+# line_colors <- c("salmon", "gold", "aquamarine", "darkblue", "violet", "lightpink")
+# data_plot <- subset(scale_provinces, Region == "Gyeonggi" & Type == "Apartments")
+# aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, fill = Type, color = Scale)
+# position <- c(0.75,0.25)
+# graph_title <- "Sales Price Index for Apartments in Gyeonggi Province by Scale (2012-01-01 to 2025-02-01)"
+# 
+# plot5 <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+# 
+# plot5
 
 #===============================================================================
 
@@ -84,23 +162,15 @@ scale_seoul <- create_subset(input_df = hpi_scale, remove_cols, filter_region_va
 # Plots (using Whole Country Type subset)
 
 #plot, combining all Types of housing
+line_colors <- c("tomato", "seagreen2", "darkturquoise", "slateblue")
+data_plot <- type_wholecountry
+aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Type)
+position <- c(0.85,0.25)
+graph_title <- "Overall Declining SPI From 2022, SPI for Detached Houses Continue Trending Upward"
 
-max_spi <- max(type_wholecountry$SalesPriceIndex, na.rm = TRUE)
+type_spi_wc_plot <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
 
-ggplot(data = type_wholecountry, mapping = aes(x = DateObjs, y = SalesPriceIndex, color = Type)) +
-  geom_line(size = 1) +
-  geom_point(x = as.Date("2021-06-01"), y = 100, color = "red") +
-  theme(legend.position = c(0.85,0.25)) +
-  guides(fill = "none") + 
-  labs(x = "Date", y = "Sales Price Index", 
-       caption = "*Red dot indicates value at which Sales Price Index is indexed to: Date = 2021-06-01, SPI = 100", 
-       title = "Sales Price Index for Types of Housing in The Whole Country (2012-01-01 to 2025-02-01)") +
-  theme_minimal() +
-  scale_x_date(breaks = as.Date(paste0(2012:2025, "-01-01")), date_labels = "%Y") +
-  scale_y_continuous(breaks = c(seq(0, max_spi-1, by = 5), max_spi), 
-                     position = "right", 
-                     labels = function(x) ifelse(x == max_spi, paste0("Max: ", x), x)) +
-  geom_hline(yintercept=max_spi, linetype="dashed")
+type_spi_wc_plot
 
 #===============================================================================
 
@@ -109,6 +179,16 @@ ggplot(data = type_wholecountry, mapping = aes(x = DateObjs, y = SalesPriceIndex
 # 9 Province
 
 #plot, subset Total for 9 Provinces
+line_colors <- c("salmon", "gold", "aquamarine", "darkblue", "violet", "lightpink", "lightgreen", "dodgerblue", "deeppink2")
+data_plot <- subset(type_provinces, Type == "Total")
+aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, fill = Region, color = Region)
+position <- c(0.75,0.25)
+graph_title <- "Sales Price Index for All Types of Housing in each Province (2012-01-01 to 2025-02-01)"
+
+plot2 <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+
+plot2
+
 ggplot(data = subset(type_provinces, Type == "Total"), 
        mapping = aes(x = DateObjs, y = SalesPriceIndex, fill = Region, color = Region)) +
   geom_line(size = 1) +
@@ -191,7 +271,7 @@ ggplot(data = subset(type_seoul, Type == "Total" & Region == "Seoul"),
 
 #plot, subset apartments by scale 
 colors = c("salmon", "gold", "aquamarine", "darkblue", "violet", "lightpink")
-ggplot(data = subset(scale_wc, Type == "Apartments"), 
+ggplot(data = subset(scale_wholecountry, Type == "Apartments"), 
        mapping = aes(x = DateObjs, y = SalesPriceIndex, fill = Scale, color = Scale)) +
   geom_line(size = 1) +
   scale_color_manual(values = colors) +
@@ -204,7 +284,7 @@ ggplot(data = subset(scale_wc, Type == "Apartments"),
 
 #plot, subset row houses by scale
 colors = c("firebrick", "lightgreen", "dodgerblue", "deeppink2")
-ggplot(data = subset(scale_wc, Type == "Row Houses"), 
+ggplot(data = subset(scale_wholecountry, Type == "Row Houses"), 
        mapping = aes(x = DateObjs, y = SalesPriceIndex, fill = Scale, color = Scale)) +
   geom_line(size = 1) +
   scale_color_manual(values = colors) +
@@ -217,7 +297,7 @@ ggplot(data = subset(scale_wc, Type == "Row Houses"),
 
 #plot, subset detached houses by scale
 colors = c("cyan2", "goldenrod1", "maroon3")
-ggplot(data = subset(scale_wc, Type == "Detached Houses"), 
+ggplot(data = subset(scale_wholecountry, Type == "Detached Houses"), 
        mapping = aes(x = DateObjs, y = SalesPriceIndex, fill = Scale, color = Scale)) +
   geom_line(size = 1) +
   scale_color_manual(values = colors) +
