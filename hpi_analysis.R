@@ -11,7 +11,7 @@ hpi_scale <- read_csv("hpi_scale_copy.csv")
 
 hpi_type <- hpi_type %>% select(-UNIT, -Item)
 hpi_scale <- hpi_scale %>% select(-UNIT, -Item)
-hpi_type <- hpi_type[-c(229, 459, 135, 364), ] #removes duplicates for jeju, gwangju
+hpi_type <- hpi_type[-c(229, 459, 135, 365), ] #removes duplicates for jeju, gwangju
 
 #===============================================================================
 
@@ -118,6 +118,15 @@ filter_region_value <- c('Gwangju')
 
 type_gwangju <- create_subset(input_df = hpi_type, remove_cols, filter_region_value)
 
+# Seoul Region/District Subset (from type data)
+remove_cols <- c("Type", "Region")
+filter_region_value <- c('Dosim-kwon', 'Dongbuk-kwon', 'Seobuk-kwon', 'Seonam-kwon', 'Dongnam-kwon', 'Jongno-gu',
+                         'Jung-gu','Yongsan-gu','Seongdong-gu','Gwangjin-gu','Dongdaemun-gu','Jungnang-gu',
+                         'Seongbuk-gu','Dobong-gu','Nowon-gu','Eunpyeong-gu','Seodaemun-gu',
+                         'Mapo-gu','Yangcheon-gu','Gangseo-gu','Guro-gu','Geumcheon-gu','Yeongdeungpo-gu',
+                         'Dongjak-gu','Gwanak-gu','Seocho-gu','Songpa-gu','Gangdong-gu')
+type_seoul_region_dist <- create_subset(input_df = hpi_type, remove_cols, filter_region_value)
+
 #===============================================================================
 
 # Plots (using Whole Country Type subset)
@@ -141,7 +150,7 @@ line_colors <- c("red3", "orange2", "green2", "blue", "violet", "lightpink", "li
 data_plot <- subset(type_provinces, Type == "Total")
 aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Region)
 position <- c(0.78,0.3)
-graph_title <- "SPI for All Types of Housing for Every Province Lower than 2022-2023 Levels, Gangwon Province Has Highest Current SPI While Gyeonggi Has Lowest"
+graph_title <- "SPI for All Types of Housing for Every Province Lower than 2022-2023 Levels\nGangwon Province Has Highest Current SPI While Gyeonggi Has Lowest"
 
 type_prov_plot_total <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
 type_prov_plot_total
@@ -172,6 +181,32 @@ graph_title <- "SPI For Apartments & Row Houses in Gwangju Trending Downwards Fr
 
 type_gwangju_plot_all <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
 type_gwangju_plot_all
+
+#===============================================================================
+
+# Plots (using Seoul Type Region & District Subset)
+
+#plot, seoul regions (동북, 동심, 서북, 서남, 동남) all house types
+line_colors <- c("salmon", "gold", "seagreen3", "darkblue", "slateblue2")
+data_plot <- subset(type_seoul_region_dist, (Region == "Dongbuk-kwon" | Region == "Dongnam-kwon" | Region == "Dosim-kwon" | Region == "Seobuk-kwon" | Region == "Seonam-kwon") & Type == "Total")
+aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Region)
+position <- c(0.85,0.25)
+graph_title <- "SPI For Homes in Dongnam (Southeast) Region of Seoul Has Highest SPI Out of All 5 of Seoul's Regions, Dongbuk (Northeast) Has the Lowest"
+
+type_seoul_regions_plot <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+type_seoul_regions_plot
+
+#Districts in Dongnam Region plot (excludes Gangnam)
+selected_districts <- c('Seocho-gu', 'Songpa-gu', 'Gangdong-gu')
+line_colors <- c("salmon", "gold", "seagreen3")
+data_plot <- subset(type_seoul_region_dist, Region %in% selected_districts & Type == "Total")
+data_plot
+aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Region)
+position <- c(0.85,0.25)
+graph_title <- "Homes in Seocho District Has Highest SPI Within the Dongnam Region of Seoul (excludes Gangnam District due to lack of data)"
+
+type_seoul_dongnam_plot <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+type_seoul_dongnam_plot
 
 #===============================================================================
 # geom_vline(xintercept = as.Date(c("2021-06-01","2017-11-01")), linetype = "dashed", color = "black") +

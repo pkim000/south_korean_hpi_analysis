@@ -1,0 +1,51 @@
+---
+title: "Korean Housing Sales Price Index Analysis"
+author: "Peter Kim"
+date: "2025-05-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+  
+rm(list = ls())
+
+library(tidyverse)
+library(modelsummary)
+library(dplyr)
+library(estimatr)
+library(patchwork)
+
+```
+
+
+```{r setwd, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+# Set the working directory
+setwd("/Users/peterq/korea\ HPI\ data/data")
+
+```
+
+
+```{r data, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+
+
+```
+
+
+```{r table1, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+
+
+```
+
+
+```{r plot1, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+
+
+```
+
+
+```{r regression1, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+
+
+```
+
+
