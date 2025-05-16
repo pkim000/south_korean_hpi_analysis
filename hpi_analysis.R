@@ -207,23 +207,3 @@ graph_title <- "Homes in Seocho District Has Highest SPI Within the Dongnam Regi
 
 type_seoul_dongnam_plot <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
 type_seoul_dongnam_plot
-
-#===============================================================================
-# geom_vline(xintercept = as.Date(c("2021-06-01","2017-11-01")), linetype = "dashed", color = "black") +
-# 
-# # Get the list of all built-in color names in R
-# all_r_colors <- colors()
-# 
-# # Generate random samples of specified lengths
-# colors_6_r <- sample(all_r_colors, 6)
-# colors_4_r <- sample(all_r_colors, 4)
-# colors_3_r <- sample(all_r_colors, 3)
-# 
-# wc_apts <-
-# wc_rowh <-
-# wc_dh <-
-# wc_apts/wc_rowh/wc_dh
-# 
-# credit <- function() {
-#   return(makeFootnote("\n\nData: KOSIS. https://kosis.kr/index/index.do"))
-# }
