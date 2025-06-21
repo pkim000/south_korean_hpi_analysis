@@ -31,6 +31,11 @@ hpi_type <- hpi_type[-c(229, 459, 135, 365), ] #removes duplicates for jeju, gwa
 ```
 
 
+```{r setup-knitr-opts, include=FALSE}
+knitr::opts_chunk$set(fig.width=11, fig.height=7, out.width="100%", fig.retina=2, echo=FALSE)
+```
+
+
 ```{r functions, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
 # Function Creating Subsets From Imported Data 
 
@@ -77,7 +82,9 @@ create_spi_plot <- function(data_plot, line_colors, aes_mapping, position, graph
           axis.text.x = element_text(size = 12),               
           axis.text.y = element_text(size = 12),              
           legend.title = element_text(size = 13),              
-          legend.text = element_text(size = 11)) +
+          legend.text = element_text(size = 11),
+          panel.grid.minor = element_blank(),
+          panel.grid.major = element_line(linetype = "dashed", linewidth = 0.3, colour = "gray85")) +
     guides(fill = "none") + 
     labs(x = "Date", y = "Sales Price Index", 
          caption = "*Red dot indicates value at which Sales Price Index is indexed to: Date = 2021-06-01, SPI = 100", 
@@ -162,6 +169,7 @@ type_comparison_df <- create_subset(input_df = hpi_type, remove_cols, filter_reg
 
 This analysis explores trends of Sales Price Index 
 
+#### Figure 1: 
 
 ```{r plot1, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
 # Plots (using Whole Country Type subset)
@@ -171,7 +179,7 @@ line_colors <- c("tomato", "seagreen2", "darkturquoise", "slateblue")
 data_plot <- type_wholecountry
 aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Type)
 position <- c(0.85,0.25)
-graph_title <- "Country-wide Decline in SPI for Apartments & Row Houses From 2022, Detached Houses Unaffected and Continually Trending Upward"
+graph_title <- "Country-wide Decline in Sales Price Index for Apartments & Row Houses From 2022, Detached Houses Unaffected"
 
 type_wc_plot_all <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
 type_wc_plot_all
@@ -179,46 +187,72 @@ type_wc_plot_all
 
 ```
 
+#### Figure 2:
 
 ```{r plot2, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
-# Plots (using Provinces Type subset)
+# Plots (using Cities Type subset)
 
 #plot, total for housing for every province
-line_colors <- c("red3", "orange2", "green2", "blue", "violet", "lightpink", "lightgreen", "dodgerblue", "deeppink2")
-data_plot <- subset(type_provinces, Type == "Total")
+line_colors <- c("red3", "orange2", "green2", "blue", "purple", "magenta", "turquoise")
+data_plot <- subset(type_cities_df, Type == "Total")
 aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Region)
 position <- c(0.78,0.3)
-graph_title <- "SPI for All Types of Housing for Every Province Lower than 2022-2023 Levels\nGangwon Province Has Highest Current SPI While Gyeonggi Has Lowest"
+graph_title <- "Seoul House Types Have the Highest SPI Out of All Major Metropolitan Cities in South Korea"
 
-type_prov_plot_total <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
-type_prov_plot_total
+type_cities_plot_total <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+type_cities_plot_total
 
 ```
 
+#### Figure 3:
 
 ```{r plot3, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
-# Plots (using Provinces Type subset)
+# Plots (using Seoul Type subset)
 
-#plot, detached house SPI for every province
-line_colors <- c("red3", "orange2", "green2", "blue", "violet", "lightpink", "lightgreen", "dodgerblue", "deeppink2")
-data_plot <- subset(type_provinces, Type == "Detached Houses")
-aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Region)
-position <- c(0.78,0.3)
-graph_title <- "Gyeonggi Province Detached Houses Have Highest SPI, Jeonnam Province Has Lowest"
+#plot, seoul all house types
+line_colors <- c("salmon", "gold", "aquamarine")
+data_plot <- subset(type_seoul, Region == "Seoul" & (Type == "Detached Houses" | Type == "Apartments" | Type == "Row Houses"))
+aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Type)
+position <- c(0.85,0.25)
+graph_title <- "SPI For Detached Houses in Seoul Continually Trending Upward, Apartments & Row Houses Still Recovering"
 
-type_prov_plot_detach <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
-type_prov_plot_detach
+type_seoul_plot_all <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+type_seoul_plot_all
+
 ```
 
+#### Figure 4:
 
 ```{r plot4, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+# Plots (using Seoul Type Region & District Subset)
 
+#plot, seoul regions (동북, 동심, 서북, 서남, 동남) all house types
+line_colors <- c("salmon", "gold", "seagreen3", "darkblue", "slateblue2")
+data_plot <- subset(type_seoul_region_dist, (Region == "Dongbuk-kwon" | Region == "Dongnam-kwon" | Region == "Dosim-kwon" | Region == "Seobuk-kwon" | Region == "Seonam-kwon") & Type == "Total")
+aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Region)
+position <- c(0.85,0.25)
+graph_title <- "Dongnam (Southeast) Region Homes Have Highest SPI in Seoul, Dongbuk (Northeast) Region Has the Lowest"
+
+type_seoul_regions_plot <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+type_seoul_regions_plot
 
 ```
 
+#### Figure 5:
 
 ```{r plot5, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+# Plots (using Seoul Type Region & District Subset)
 
+#Districts in Dongnam Region plot (excludes Gangnam)
+selected_districts <- c('Seocho-gu', 'Songpa-gu', 'Gangdong-gu')
+line_colors <- c("salmon", "gold", "seagreen3")
+data_plot <- subset(type_seoul_region_dist, Region %in% selected_districts & Type == "Total")
+aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Region)
+position <- c(0.85,0.25)
+graph_title <- "Homes in Seocho District Has Highest SPI Within the Dongnam Region of Seoul (excludes Gangnam District due to lack of data)"
+
+type_seoul_dongnam_plot <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+type_seoul_dongnam_plot
 
 ```
 
