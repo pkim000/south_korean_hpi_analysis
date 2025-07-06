@@ -32,7 +32,7 @@ hpi_type <- hpi_type[-c(229, 459, 135, 365), ] #removes duplicates for jeju, gwa
 
 
 ```{r setup-knitr-opts, include=FALSE}
-knitr::opts_chunk$set(fig.width=11, fig.height=7, out.width="100%", fig.retina=2, echo=FALSE)
+knitr::opts_chunk$set(fig.width=13, fig.height=7, out.width="100%", fig.retina=2, echo=FALSE)
 ```
 
 
@@ -75,7 +75,7 @@ create_spi_plot <- function(data_plot, line_colors, aes_mapping, position, graph
     geom_point(x = as.Date("2021-06-01"), y = 100, color = "red") +
     theme_minimal() +
     theme(legend.position = position,
-          plot.title = element_text(size = 14, face = "bold"),
+          plot.title = element_text(size = 16, face = "bold"),
           plot.caption = element_text(size = 10),
           axis.title.x = element_text(size = 14),              
           axis.title.y = element_text(size = 14),              
@@ -167,9 +167,19 @@ type_comparison_df <- create_subset(input_df = hpi_type, remove_cols, filter_reg
 
 ### Introduction: 
 
-This analysis explores trends of Sales Price Index 
+This analysis explores trends of Sales Price Index for housing in South Korea. Sales Price Index (SPI) or Housing Price Index allows for the comparison of the prices of housing in a certain region (province, city, neighborhood) to a certain point in time. SPI in the data set is set at the time period 2021-06-01, with all SPI values at this time period equaling 100. SPI values at later or previous dates above this value indicates that housing prices are higher than the prices from June 2021. Conversely, SPI values below this value indicate housing prices have fallen below what they were previously in June 2021. 
 
-#### Figure 1: 
+The analysis is split into three main levels: 
+
+1. Whole Country
+2. Province
+3. Major Cities
+  
+After these broad overviews I explore district and neighborhood level trends in the capital city Seoul. 
+
+The data used in this analysis was procured from the Korean Statistical Information Service (KOSIS), a national statistical database for all data related to South Korea. 
+
+### Figure 1: 
 
 ```{r plot1, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
 # Plots (using Whole Country Type subset)
@@ -184,12 +194,32 @@ graph_title <- "Country-wide Decline in Sales Price Index for Apartments & Row H
 type_wc_plot_all <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
 type_wc_plot_all
 
+```
+
+Figure 1 shows the overall trend in SPI for various types of housing (Apartments, Detached Houses, Row Houses). From mid-2022, there seems to have been a sharp decline in SPI for apartments and row houses which they have still not recovered from to this day. Only detached houses seem to have been unaffected by the overall decline in SPI. 
+
+### Figure 2:
+
+```{r plot2, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+# Plots (using Provinces Type subset)
+
+#plot, total for housing for every province
+line_colors <- c("red3", "orange2", "green2", "blue", "violet", "lightpink", "lightgreen", "dodgerblue", "deeppink2")
+data_plot <- subset(type_provinces, Type == "Total")
+aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Region)
+position <- c(0.78,0.3)
+graph_title <- "SPI for All Types of Housing for Every Province Lower than 2022-2023 Levels"
+
+type_prov_plot_total <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
+type_prov_plot_total
 
 ```
 
-#### Figure 2:
+Figure 2 shows the SPI trends for the nine provinces of South Korea. This graph only shows the average SPI trend for all housing in each province because including data for each type of housing would over complicate the graph. Some provinces have reached higher SPI levels than the reference point while most are at or below the 2021 reference. 
 
-```{r plot2, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+### Figure 3:
+
+```{r plot3, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
 # Plots (using Cities Type subset)
 
 #plot, total for housing for every province
@@ -204,9 +234,11 @@ type_cities_plot_total
 
 ```
 
-#### Figure 3:
+Figure 3 shows the SPI trends for the major metropolitan cities in South Korea. As expected, Seoul in present day has the highest SPI and has recovered the most after the steep decline in 2022. However, this only indicates recovery, not growth as Seoul's SPI presently is around the same level as the reference period established in 2021. For the other metropolitan cities current SPI levels are below the reference point. 
 
-```{r plot3, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+### Figure 4:
+
+```{r plot4, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
 # Plots (using Seoul Type subset)
 
 #plot, seoul all house types
@@ -221,9 +253,11 @@ type_seoul_plot_all
 
 ```
 
-#### Figure 4:
+Figure 4 shows which specific types of housing have appreciated most from the reference period. Row houses and apartments in Seoul generally seem to have fallen below the reference period. This potentially indicates that on average row houses and apartments are now worth less than they were in June 2021. Detached houses have continued to appreciate in value. 
 
-```{r plot4, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+### Figure 5:
+
+```{r plot5, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
 # Plots (using Seoul Type Region & District Subset)
 
 #plot, seoul regions (동북, 동심, 서북, 서남, 동남) all house types
@@ -238,9 +272,11 @@ type_seoul_regions_plot
 
 ```
 
-#### Figure 5:
+Figure 5 analyzes which region of Seoul has had the most appreciation in SPI. Seoul in split into five regions Dongbuk-kwon: Northeast, Dongnam-kwon: Southeast, Dosim-kwon: Downtown, Seobuk-kwon: Northwest, Seonam-kwon: Southwest. The Southeast region (Dongnam-kwon) seems to have the highest SPI out of all five regions.
 
-```{r plot5, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+### Figure 6:
+
+```{r plot6, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
 # Plots (using Seoul Type Region & District Subset)
 
 #Districts in Dongnam Region plot (excludes Gangnam)
@@ -249,15 +285,15 @@ line_colors <- c("salmon", "gold", "seagreen3")
 data_plot <- subset(type_seoul_region_dist, Region %in% selected_districts & Type == "Total")
 aes_mapping <- aes(x = DateObjs, y = SalesPriceIndex, color = Region)
 position <- c(0.85,0.25)
-graph_title <- "Homes in Seocho District Has Highest SPI Within the Dongnam Region of Seoul (excludes Gangnam District due to lack of data)"
+graph_title <- "Homes in Seocho District Has Highest SPI Within the Dongnam Region of Seoul \n(excludes Gangnam District due to lack of data)"
 
 type_seoul_dongnam_plot <- create_spi_plot(data_plot, line_colors, aes_mapping, position, graph_title)
 type_seoul_dongnam_plot
 
 ```
 
+Figure 6 analyzes which districts in the Southeast Region (Dongnam-kwon) of Seoul has the highest SPI. In the graph we see that the Seocho District (Seocho-gu) has the highest SPI out of the 4 districts which make up the Southeast region. Gangnam District (Gangnam-gu) has not been included in the data set which is why we cannot show the SPI for this district. The SPI for the Seocho District is noticeably higher than for any other regional average SPI on the province, country, or city level. 
 
-```{r plot6, echo=FALSE, comment=NA, message=FALSE, warning=FALSE}
+### Conclusion
 
-
-```
+Overall, this analysis shows that on average SPI for housing in South Korea has been greatly effected since the middle of 2022. Most provinces, cities, and the overall country has been negativley effected by this event and SPI overall is still recovering for most areas in South Korea. There are exceptions regionally as well as depending on the type of housing. The capital city Seoul compared to the rest of the country has SPI levels higher than the rest of the country for every type of housing. SPI differed depending on type of housing. For example, for detached houses, despite the level of analysis have consistently been trending upwards in SPI. Exploring what specific event(s) caused this country wide decline in SPI in 2022 and the factors as to why detached houses continue to grow in SPI compared to apartments and row houses are a few examples of other interesting avenues of research to explore in the future. 
